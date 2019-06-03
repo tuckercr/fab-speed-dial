@@ -17,7 +17,8 @@
 package io.github.yavski.fabspeeddial.samples;
 
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
+
+import androidx.appcompat.widget.Toolbar;
 
 import io.github.yavski.fabmenu.samples.R;
 
@@ -27,7 +28,7 @@ public class PositionSampleActivity extends BaseSampleActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_position_sample);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
     }
 

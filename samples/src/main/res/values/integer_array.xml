@@ -5,4 +5,9 @@
         <item>@color/holo_purple</item>
         <item>@color/holo_green_light</item>
     </integer-array>
+    <integer-array name="fab_menu_icon_colors">
+        <item>@android:color/white</item>
+        <item>@android:color/white</item>
+        <item>@android:color/black</item>
+    </integer-array>
 </resources>

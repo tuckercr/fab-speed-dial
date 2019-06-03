@@ -18,14 +18,17 @@ package io.github.yavski.fabspeeddial;
 
 import android.content.Context;
 import android.graphics.Rect;
-import android.os.Build;
-import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.view.ViewPropertyAnimatorCompat;
 import android.util.AttributeSet;
 import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.ViewPropertyAnimatorCompat;
+
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -49,7 +52,7 @@ import java.util.List;
  * <p>
  * <p>
  * A slightly modified version of the original
- * {@link android.support.design.widget.FloatingActionButton.Behavior}.
+ * {@link FloatingActionButton.Behavior}.
  * <p>
  * Created by yavorivanov on 03/01/2016.
  */
@@ -57,31 +60,33 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
 
     // We only support the FAB <> Snackbar shift movement on Honeycomb and above. This is
     // because we can use view translation properties which greatly simplifies the code.
-    private static final boolean SNACKBAR_BEHAVIOR_ENABLED = Build.VERSION.SDK_INT >= 11;
+    private static final boolean SNACKBAR_BEHAVIOR_ENABLED = true;
 
     private ViewPropertyAnimatorCompat mFabTranslationYAnimator;
     private float mFabTranslationY;
     private Rect mTmpRect;
 
+    @SuppressWarnings("unused")
     public FabSpeedDialBehaviour() {
 
     }
 
+    @SuppressWarnings("unused")
     public FabSpeedDialBehaviour(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
     @Override
-    public boolean layoutDependsOn(CoordinatorLayout parent, FabSpeedDial child, View dependency) {
+    public boolean layoutDependsOn(@NonNull CoordinatorLayout parent, @NonNull FabSpeedDial child, @NonNull View dependency) {
         // We're dependent on all SnackbarLayouts (if enabled)
         return SNACKBAR_BEHAVIOR_ENABLED && dependency instanceof Snackbar.SnackbarLayout;
     }
 
     @Override
-    public boolean onDependentViewChanged(CoordinatorLayout parent, FabSpeedDial child,
-                                          View dependency) {
+    public boolean onDependentViewChanged(@NonNull CoordinatorLayout parent, @NonNull FabSpeedDial child,
+                                          @NonNull View dependency) {
         if (dependency instanceof Snackbar.SnackbarLayout) {
-            updateFabTranslationForSnackbar(parent, child, dependency);
+            updateFabTranslationForSnackbar(parent, child);
         } else if (dependency instanceof AppBarLayout) {
             // If we're depending on an AppBarLayout we will show/hide it automatically
             // if the FAB is anchored to the AppBarLayout
@@ -90,8 +95,7 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
         return false;
     }
 
-    private void updateFabTranslationForSnackbar(CoordinatorLayout parent,
-                                                 final FabSpeedDial fab, View snackbar) {
+    private void updateFabTranslationForSnackbar(CoordinatorLayout parent, final FabSpeedDial fab) {
         if (fab.getVisibility() != View.VISIBLE) {
             return;
         }
@@ -102,7 +106,7 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
             return;
         }
 
-        final float currentTransY = ViewCompat.getTranslationY(fab);
+        final float currentTransY = fab.getTranslationY();
 
         // Make sure that any current animation is cancelled
         if (mFabTranslationYAnimator != null) {
@@ -115,7 +119,7 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
                     .translationY(targetTransY);
             mFabTranslationYAnimator.start();
         } else {
-            ViewCompat.setTranslationY(fab, targetTransY);
+            fab.setTranslationY(targetTransY);
         }
 
         mFabTranslationY = targetTransY;
@@ -129,7 +133,7 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
             final View view = dependencies.get(i);
             if (view instanceof Snackbar.SnackbarLayout && parent.doViewsOverlap(fab, view)) {
                 minOffset = Math.min(minOffset,
-                        ViewCompat.getTranslationY(view) - view.getHeight());
+                        view.getTranslationY() - view.getHeight());
             }
         }
 
@@ -137,7 +141,7 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
     }
 
     @Override
-    public boolean onLayoutChild(CoordinatorLayout parent, FabSpeedDial child, int layoutDirection) {
+    public boolean onLayoutChild(CoordinatorLayout parent, @NonNull FabSpeedDial child, int layoutDirection) {
         // First, lets make sure that the visibility of the FAB is consistent
         final List<View> dependencies = parent.getDependencies(child);
         for (int i = 0, count = dependencies.size(); i < count; i++) {
@@ -170,9 +174,9 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
         final Rect rect = mTmpRect;
         ViewGroupUtils.getDescendantRect(parent, appBarLayout, rect);
 
-        /**
+        /*
          * TODO: Remove reflection and replace with
-         * AppBarLayout#getMinimumHeightForVisibleOverlappingContent() once made publuc
+         * AppBarLayout#getMinimumHeightForVisibleOverlappingContent() once made public
          */
         int minimumHeightForVisibleOverlappingContent =
                 getMinimumHeightForVisibleOverlappingContent(appBarLayout);
@@ -193,13 +197,9 @@ public class FabSpeedDialBehaviour extends CoordinatorLayout.Behavior<FabSpeedDi
         try {
             Method method = appBarLayout.getClass().getDeclaredMethod("getMinimumHeightForVisibleOverlappingContent");
             method.setAccessible(true);
-            Object value = method.invoke(appBarLayout, null);
+            Object value = method.invoke(appBarLayout, (Object[]) null);
             return (int) value;
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return -1;

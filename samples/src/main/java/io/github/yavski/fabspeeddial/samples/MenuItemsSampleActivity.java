@@ -16,31 +16,35 @@
 
 package io.github.yavski.fabspeeddial.samples;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.support.design.internal.NavigationMenu;
-import android.support.design.widget.Snackbar;
-import android.support.v7.widget.SwitchCompat;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.widget.EditText;
+
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+
+import com.google.android.material.internal.NavigationMenu;
+import com.google.android.material.snackbar.Snackbar;
 
 import io.github.yavski.fabmenu.samples.R;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
 
+@SuppressLint("RestrictedApi")
 public class MenuItemsSampleActivity extends BaseSampleActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu_items_sample);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        final EditText inputView = (EditText) findViewById(R.id.puppy_name);
+        final EditText inputView = findViewById(R.id.puppy_name);
 
-        FabSpeedDial fabSpeedDial = ((FabSpeedDial) findViewById(R.id.fab_speed_dial));
+        FabSpeedDial fabSpeedDial = findViewById(R.id.fab_speed_dial);
         fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
             @Override
             public boolean onPrepareMenu(NavigationMenu navigationMenu) {
@@ -73,7 +77,7 @@ public class MenuItemsSampleActivity extends BaseSampleActivity {
     }
 
     private void setMenuItemVisibility(NavigationMenu menu, int menuItemId, int switchItem) {
-        SwitchCompat switchView = (SwitchCompat) findViewById(switchItem);
+        SwitchCompat switchView = findViewById(switchItem);
         menu.findItem(menuItemId).setVisible(switchView.isChecked());
     }
 

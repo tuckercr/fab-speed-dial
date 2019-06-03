@@ -16,6 +16,7 @@
 
 package io.github.yavski.fabspeeddial;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -25,17 +26,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.design.internal.NavigationMenu;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.view.ViewPropertyAnimatorListenerAdapter;
-import android.support.v4.view.animation.FastOutLinearInInterpolator;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
-import android.support.v7.view.SupportMenuInflater;
-import android.support.v7.view.menu.MenuBuilder;
-import android.support.v7.widget.CardView;
 import android.text.TextUtils;
 import android.util.AndroidRuntimeException;
 import android.util.AttributeSet;
@@ -52,6 +42,19 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.view.SupportMenuInflater;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.cardview.widget.CardView;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.ViewPropertyAnimatorListenerAdapter;
+import androidx.interpolator.view.animation.FastOutLinearInInterpolator;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.internal.NavigationMenu;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,58 +62,31 @@ import io.github.yavski.fabmenu.R;
 
 /**
  * Created by yavorivanov on 01/01/2016.
+ * <p>
+ * TODO investigate deprecation of DefaultBehavior
+ * https://developer.android.com/reference/android/support/design/widget/CoordinatorLayout.AttachedBehavior.html
  */
+@SuppressLint("RestrictedApi")
 @CoordinatorLayout.DefaultBehavior(FabSpeedDialBehaviour.class)
 public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
 
-    /**
-     * Called to notify of close and selection changes.
-     */
-    public interface MenuListener {
-
-        /**
-         * Called just before the menu items are about to become visible.
-         * Don't block as it's called on the main thread.
-         *
-         * @param navigationMenu The menu containing all menu items.
-         * @return You must return true for the menu to be displayed;
-         * if you return false it will not be shown.
-         */
-        boolean onPrepareMenu(NavigationMenu navigationMenu);
-
-        /**
-         * Called when a menu item is selected.
-         *
-         * @param menuItem The menu item that is selected
-         * @return whether the menu item selection was handled
-         */
-        boolean onMenuItemSelected(MenuItem menuItem);
-
-        void onMenuClosed();
-    }
-
-    private static final String TAG = FabSpeedDial.class.getSimpleName();
-
-    private static final int VSYNC_RHYTHM = 16;
-
     public static final FastOutSlowInInterpolator FAST_OUT_SLOW_IN_INTERPOLATOR =
             new FastOutSlowInInterpolator();
-
     public static final int BOTTOM_END = 0;
     public static final int BOTTOM_START = 1;
     public static final int TOP_END = 2;
-    public static final int TOP_START = 3;
+    public static final int TOP_START = 3; // TODO why unused?
+    private static final String TAG = FabSpeedDial.class.getSimpleName();
+    private static final int VSYNC_RHYTHM = 16;
     private static final int DEFAULT_MENU_POSITION = BOTTOM_END;
-
+    FloatingActionButton fab;
     private MenuListener menuListener;
     private NavigationMenu navigationMenu;
     private Map<FloatingActionButton, MenuItem> fabMenuItemMap;
     private Map<CardView, MenuItem> cardViewMenuItemMap;
 
     private LinearLayout menuItemsLayout;
-    FloatingActionButton fab;
     private View touchGuard = null;
-
     private int menuId;
     private int fabGravity;
     private Drawable fabDrawable;
@@ -123,14 +99,14 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
     private boolean miniFabTitlesEnabled;
     private int miniFabTitleTextColor;
     private int[] miniFabTitleTextColorArray;
+    private int[] miniFabIconColorArray;
     private Drawable touchGuardDrawable;
     private boolean useTouchGuard;
-
     private boolean isAnimating;
-
     // Variable to hold whether the menu was open or not on config change
     private boolean shouldOpenMenu;
 
+    @SuppressWarnings("unused")
     private FabSpeedDial(Context context) {
         super(context);
     }
@@ -162,7 +138,7 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
             setGravity(Gravity.END);
         }
 
-        menuItemsLayout = (LinearLayout) findViewById(R.id.menu_items_layout);
+        menuItemsLayout = findViewById(R.id.menu_items_layout);
 
         setOrientation(VERTICAL);
 
@@ -233,6 +209,7 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
         miniFabTitleTextColor = typedArray.getColor(R.styleable.FabSpeedDial_miniFabTitleTextColor,
                 ContextCompat.getColor(getContext(), R.color.title_text_color));
 
+
         if (typedArray.hasValue(R.styleable.FabSpeedDial_miniFabTitleTextColorList)) {
             int miniFabTitleTextColorListId = typedArray.getResourceId(R.styleable.FabSpeedDial_miniFabTitleTextColorList, 0);
             TypedArray miniFabTitleTextColorTa = getResources().obtainTypedArray(miniFabTitleTextColorListId);
@@ -241,6 +218,16 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
                 miniFabTitleTextColorArray[i] = miniFabTitleTextColorTa.getResourceId(i, 0);
             }
             miniFabTitleTextColorTa.recycle();
+        }
+
+        if (typedArray.hasValue(R.styleable.FabSpeedDial_miniFabIconColorList)) {
+            int miniFabIconColorListId = typedArray.getResourceId(R.styleable.FabSpeedDial_miniFabIconColorList, 0);
+            TypedArray miniFabIconColorTa = getResources().obtainTypedArray(miniFabIconColorListId);
+            miniFabIconColorArray = new int[miniFabIconColorTa.length()];
+            for (int i = 0; i < miniFabIconColorTa.length(); i++) {
+                miniFabIconColorArray[i] = miniFabIconColorTa.getResourceId(i, 0);
+            }
+            miniFabIconColorTa.recycle();
         }
 
         touchGuardDrawable = typedArray.getDrawable(R.styleable.FabSpeedDial_touchGuardDrawable);
@@ -263,7 +250,7 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
         menuItemsLayout.setLayoutParams(layoutParams);
 
         // Set up the client's FAB
-        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = findViewById(R.id.fab);
         fab.setImageDrawable(fabDrawable);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             fab.setImageTintList(fabDrawableTint);
@@ -297,11 +284,7 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
             touchGuard.setVisibility(GONE);
 
             if (touchGuardDrawable != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    touchGuard.setBackground(touchGuardDrawable);
-                } else {
-                    touchGuard.setBackgroundDrawable(touchGuardDrawable);
-                }
+                touchGuard.setBackground(touchGuardDrawable);
             }
 
             if (parent instanceof FrameLayout) {
@@ -444,7 +427,7 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
     }
 
     private void addMenuItems() {
-        ViewCompat.setAlpha(menuItemsLayout, 1f);
+        menuItemsLayout.setAlpha(1f);
         for (int i = 0; i < navigationMenu.size(); i++) {
             MenuItem menuItem = navigationMenu.getItem(i);
             if (menuItem.isVisible()) {
@@ -458,19 +441,25 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
         ViewGroup fabMenuItem = (ViewGroup) LayoutInflater.from(getContext())
                 .inflate(getMenuItemLayoutId(), this, false);
 
-        FloatingActionButton miniFab = (FloatingActionButton) fabMenuItem.findViewById(R.id.mini_fab);
-        CardView cardView = (CardView) fabMenuItem.findViewById(R.id.card_view);
-        TextView titleView = (TextView) fabMenuItem.findViewById(R.id.title_view);
+        FloatingActionButton miniFab = fabMenuItem.findViewById(R.id.mini_fab);
+        CardView cardView = fabMenuItem.findViewById(R.id.card_view);
+        TextView titleView = fabMenuItem.findViewById(R.id.title_view);
 
         fabMenuItemMap.put(miniFab, menuItem);
         cardViewMenuItemMap.put(cardView, menuItem);
 
         miniFab.setImageDrawable(menuItem.getIcon());
+
+        if (miniFabIconColorArray != null) {
+            miniFab.setColorFilter(ContextCompat.getColor(getContext(),
+                    miniFabIconColorArray[menuItem.getOrder()]));
+        }
+
         miniFab.setOnClickListener(this);
         cardView.setOnClickListener(this);
 
-        ViewCompat.setAlpha(miniFab, 0f);
-        ViewCompat.setAlpha(cardView, 0f);
+        miniFab.setAlpha(0f);
+        cardView.setAlpha(0f);
 
         final CharSequence title = menuItem.getTitle();
         if (!TextUtils.isEmpty(title) && miniFabTitlesEnabled) {
@@ -554,9 +543,9 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
     private void animateViewIn(final View view, int position) {
         final float offsetY = getResources().getDimensionPixelSize(R.dimen.keyline_1);
 
-        ViewCompat.setScaleX(view, 0.25f);
-        ViewCompat.setScaleY(view, 0.25f);
-        ViewCompat.setY(view, ViewCompat.getY(view) + offsetY);
+        view.setScaleX(0.25f);
+        view.setScaleY(0.25f);
+        view.setY(view.getY() + offsetY);
 
         ViewCompat.animate(view)
                 .setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime))
@@ -625,24 +614,33 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
         return super.dispatchKeyEventPreIme(event);
     }
 
+    /**
+     * Called to notify of close and selection changes.
+     */
+    public interface MenuListener {
+
+        /**
+         * Called just before the menu items are about to become visible.
+         * Don't block as it's called on the main thread.
+         *
+         * @param navigationMenu The menu containing all menu items.
+         * @return You must return true for the menu to be displayed;
+         * if you return false it will not be shown.
+         */
+        boolean onPrepareMenu(NavigationMenu navigationMenu);
+
+        /**
+         * Called when a menu item is selected.
+         *
+         * @param menuItem The menu item that is selected
+         * @return whether the menu item selection was handled
+         */
+        boolean onMenuItemSelected(MenuItem menuItem);
+
+        void onMenuClosed();
+    }
+
     static class SavedState extends BaseSavedState {
-
-        boolean isShowingMenu;
-
-        public SavedState(Parcel source) {
-            super(source);
-            this.isShowingMenu = source.readInt() == 1;
-        }
-
-        public SavedState(Parcelable superState) {
-            super(superState);
-        }
-
-        @Override
-        public void writeToParcel(Parcel out, int flags) {
-            super.writeToParcel(out, flags);
-            out.writeInt(this.isShowingMenu ? 1 : 0);
-        }
 
         public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {
             @Override
@@ -655,6 +653,22 @@ public class FabSpeedDial extends LinearLayout implements View.OnClickListener {
                 return new SavedState[i];
             }
         };
+        boolean isShowingMenu;
+
+        SavedState(Parcel source) {
+            super(source);
+            this.isShowingMenu = source.readInt() == 1;
+        }
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeInt(this.isShowingMenu ? 1 : 0);
+        }
 
     }
 

@@ -1,7 +1,8 @@
 package io.github.yavski.fabspeeddial;
 
-import android.support.design.internal.NavigationMenu;
 import android.view.MenuItem;
+
+import com.google.android.material.internal.NavigationMenu;
 
 /**
  * This adapter class provides empty implementations of the methods from
@@ -12,7 +13,6 @@ public class SimpleMenuListenerAdapter implements FabSpeedDial.MenuListener {
 
     @Override
     public boolean onPrepareMenu(NavigationMenu navigationMenu) {
-
         return true;
     }
 

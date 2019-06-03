@@ -18,8 +18,10 @@ package io.github.yavski.fabspeeddial.samples;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -37,7 +39,7 @@ public class HomeActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         titles = getResources().getStringArray(R.array.title_array);
@@ -47,18 +49,19 @@ public class HomeActivity extends AppCompatActivity implements AdapterView.OnIte
                 R.layout.simple_list_item_2,
                 R.id.text1,
                 titles) {
+            @NonNull
             @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
+            public View getView(int position, View convertView, @NonNull ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-                TextView text1 = (TextView) view.findViewById(R.id.text1);
-                TextView text2 = (TextView) view.findViewById(R.id.text2);
+                TextView text1 = view.findViewById(R.id.text1);
+                TextView text2 = view.findViewById(R.id.text2);
 
                 text1.setText(titles[position]);
                 text2.setText(descriptions[position]);
                 return view;
             }
         };
-        ListView listView = (ListView) findViewById(R.id.list_view);
+        ListView listView = findViewById(R.id.list_view);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
     }
